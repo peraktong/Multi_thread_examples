@@ -13,7 +13,7 @@ import os.path
 import _pickle as cpickle
 from scipy import spatial
 from multiprocessing import Process
-
+import multiprocessing
 def log10(x):
     if x > 0:
         return math.log10(x)
@@ -194,8 +194,8 @@ class KD_search():
         density_array = np.array(density_array)
         density_array_mass = np.array(density_array_mass)
 
-        self.dict_results[str(N_thread)] = density_array
-        self.dict_results_mass[str(N_thread)] = density_array_mass
+        final_results[str(N_thread)] = density_array
+        final_results_mass[str(N_thread)] = density_array_mass
 
 
 model = KD_search()
@@ -206,7 +206,7 @@ try:
     thread_to_use = int(input[1])
 
 except:
-    thread_to_use = 12
+    thread_to_use = 24
 
 
 print("Total threads %d and total numbers %d"%(thread_to_use,model.N_tot))
@@ -214,6 +214,13 @@ print("Total threads %d and total numbers %d"%(thread_to_use,model.N_tot))
 bin_size = model.N_tot//thread_to_use
 
 my_pool = []
+
+manager = multiprocessing.Manager()
+final_results = manager.dict()
+
+manager_2 = multiprocessing.Manager()
+final_results_mass = manager_2.dict()
+
 
 for ni in range(0,thread_to_use):
     if ni<thread_to_use-1:
@@ -236,7 +243,7 @@ print("All threads done")
 
 density_array_all = []
 for x in range(0, thread_to_use):
-    density_array_all.extend(model.dict_results[str(x)])
+    density_array_all.extend(final_results[str(x)])
 density_array_all = np.array(density_array_all)
 
 
@@ -247,7 +254,7 @@ np.savetxt(data_path+"KD/"+"density_C250_multithread_v1.txt",density_array_all)
 
 density_array_mass_all = []
 for x in range(0, thread_to_use):
-    density_array_mass_all.extend(model.dict_results_mass[str(x)])
+    density_array_mass_all.extend(final_results_mass[str(x)])
 density_array_mass_all = np.array(density_array_mass_all)
 
 
